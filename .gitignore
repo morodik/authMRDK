@@ -1,0 +1,19 @@
+# Go binary files
+*.exe
+*.test
+*.out
+
+# Go dependencies and build directories
+/vendor/
+/bin/
+/build/
+
+# .env файл с конфиденциальными данными
+.env
+
+# IDE и редакторы
+.idea/
+*.vscode/
+
+# Логи
+*.log
