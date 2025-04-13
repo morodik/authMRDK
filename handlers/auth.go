@@ -26,7 +26,8 @@ type Credentials struct {
 }
 
 type Claims struct {
-	Email string `json:"email"`
+	UserID uint   `json:"user_id"`
+	Email  string `json:"email"`
 	jwt.RegisteredClaims
 }
 
@@ -83,7 +84,8 @@ func Login(c *gin.Context) {
 
 	expiration := time.Now().Add(24 * time.Hour)
 	claims := &Claims{
-		Email: user.Email,
+		UserID: user.ID,
+		Email:  user.Email,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiration),
 		},
@@ -100,4 +102,37 @@ func Login(c *gin.Context) {
 
 func Logout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Выход выполнен"})
+}
+
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenString := c.GetHeader("Autorization")
+		if tokenString == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Токен не предоставлен"})
+			c.Abort()
+			return
+		}
+		if len(tokenString) > 7 && tokenString[:7] == "Bearer " {
+			tokenString = tokenString[7:]
+		}
+		token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+			return jwtKey, nil
+		})
+		if err != nil || !token.Valid {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверный токен"})
+			c.Abort()
+			return
+		}
+
+		claims, ok := token.Claims.(*Claims)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверные данные токена"})
+			c.Abort()
+			return
+		}
+
+		c.Set("user_id", claims.UserID)
+		c.Set("email", claims.Email)
+		c.Next()
+	}
 }
