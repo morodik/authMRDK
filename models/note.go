@@ -1,10 +1,18 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type Note struct {
 	gorm.Model
-	UserID  uint   `gorm:"not null" json:"user_id"`
-	Title   string `gorm:"not null" json:"title"`
-	Content string `json:"content"`
+	ID        uint   `gorm:"primaryKey" json:"id"`
+	Title     string `json:"title"`
+	Content   string `json:"content"`
+	UserID    uint   `json:"user_id"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
