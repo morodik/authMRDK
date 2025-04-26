@@ -57,9 +57,9 @@ func UpdateNote(c *gin.Context) {
 }
 
 func GetNotes(c *gin.Context) {
-	userID, exists := c.Get("userID")
+	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизован"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Не автоирзован"})
 		return
 	}
 
@@ -70,4 +70,24 @@ func GetNotes(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"notes": notes})
+}
+
+func DeleteNote(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизован"})
+		return
+	}
+	noteID := c.Param("id")
+	var note models.Note
+	if err := db.DB.Where("user_id=?", noteID, userID).Find(&note).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "заметки не найдены"})
+		return
+	}
+
+	if err := db.DB.Delete(&note).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось удалить заметку"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Заметка удалена"})
 }
