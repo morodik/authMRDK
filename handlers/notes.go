@@ -3,7 +3,9 @@ package handlers
 import (
 	"auth-service/db"
 	"auth-service/models"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -80,14 +82,19 @@ func DeleteNote(c *gin.Context) {
 	}
 	noteID := c.Param("id")
 	var note models.Note
-	if err := db.DB.Where("user_id=?", noteID, userID).Find(&note).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "заметки не найдены"})
+	if err := db.DB.Where("id = ? AND user_id = ?", noteID, userID).First(&note).Error; err != nil {
+		log.Printf("Ошибка поиска заметки: %v", err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Заметка не найдена"})
 		return
 	}
 
-	if err := db.DB.Delete(&note).Error; err != nil {
+	// Мягкое удаление: устанавливаем deleted_at
+	if err := db.DB.Model(&note).Update("deleted_at", time.Now()).Error; err != nil {
+		log.Printf("Ошибка при установке deleted_at: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось удалить заметку"})
 		return
 	}
+
+	log.Printf("Заметка ID: %s успешно удалена (мягкое удаление)", noteID)
 	c.JSON(http.StatusOK, gin.H{"message": "Заметка удалена"})
 }

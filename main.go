@@ -37,6 +37,8 @@ func main() {
 		protected.POST("/Tasks", handlers.CreateTask)
 		protected.PUT("/notes/:id", handlers.UpdateNote)
 		protected.GET("/notes", handlers.GetNotes)
+		protected.GET("/user", handlers.GetUser)
+		protected.DELETE("/notes/:id", handlers.DeleteNote)
 	}
 
 	// Тестовый маршрут
